@@ -6,6 +6,9 @@ from pygame.locals import *
 bgCol = (20,20,20)
 buttonCol = (100,100,100)
 fontCol = (255,255,255)
+highlightCol = (200,200,200)
+buttonPositions = []
+menuLocation = 0
 
 def drawButton ( surface, string, y ):
   # Create and position the button
@@ -27,12 +30,25 @@ def drawButton ( surface, string, y ):
   surface.blit(button,buttonpos)
   surface.blit(text,textpos)
 
+  return buttonpos
+
 def handle_input( ):
+  global menuLocation
   for event in pygame.event.get():
-    if event.type in (QUIT, KEYDOWN):
-      return True
+    if event.type == KEYDOWN:
+      if event.key == K_DOWN:
+        menuLocation += 1
+        if menuLocation > (len(buttonPositions)-1):
+          menuLocation = (len(buttonPositions)-1)
+      elif event.key == K_UP:
+        menuLocation -= 1
+        if menuLocation < 0:
+          menuLocation = 0
+      elif event.key == K_RETURN:
+        return True
   return False
 
+# Returns the button id that is selected by the user.
 def draw( screen ):
   # Initialize background and fill with bgCol
   background = pygame.Surface(screen.get_size())
@@ -47,14 +63,32 @@ def draw( screen ):
   textpos.top = 100
   background.blit(text,textpos)
 
-  # Draw a button
-  drawButton(background, "Singleplayer", 200)
-  drawButton(background, "Multiplayer", 250)
-  drawButton(background, "Scores", 300)
+  # Make everything but the buttons transparent
+  buttons = pygame.Surface(screen.get_size())
+  buttons = buttons.convert()
+  buttons.fill((0,255,0))
+  buttons.set_colorkey((0,255,0))
+
+  # Draw the buttons
+  b1 = drawButton(buttons, "Singleplayer", 200)
+  b2 = drawButton(buttons, "Multiplayer", 250)
+  b3 = drawButton(buttons, "Scores", 300)
+  global buttonPositions
+  buttonPositions = [b1,b2,b3]
+
+  # Draw menu highlight and initalize to first item
+  highlight = pygame.Surface((220,40))
+  highlight.fill(highlightCol)
+  highlightpos = highlight.get_rect()
 
   while 42:
     if handle_input():
-      break
+      return menuLocation
+
+    highlightpos.centerx = buttonPositions[menuLocation].centerx
+    highlightpos.centery = buttonPositions[menuLocation].centery
 
     screen.blit(background,(0,0))
+    screen.blit(highlight,highlightpos)
+    screen.blit(buttons, (0,0))
     pygame.display.flip()
