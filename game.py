@@ -6,11 +6,13 @@ import joystick
 from pygame.locals import *
 
 pygame.init()
+joystick.init()
 
 BG_COLOR = (21, 35, 150)
 
-SCREEN_DIMENSIONS = (640, 480)
+SCREEN_DIMENSIONS = (1024, 768)
 PLAYER_COLOR = ( 51, 73, 160 )
+PLAY_AREA_COLOR = ( 0, 0, 50 )
 BULLET_COLOR = ( 100, 100, 255, 0 )
 DENSITY = 0.25
 
@@ -21,6 +23,13 @@ bg = pygame.Surface(SCREEN_DIMENSIONS)
 bg.fill( BG_COLOR )
 screen.blit( bg, (0, 0) )
 pygame.display.flip()
+
+# Define play area
+play_area = pygame.Surface(SCREEN_DIMENSIONS)
+play_area.set_colorkey( (0, 0, 0) )
+circlepos = (play_area.get_rect().centerx, play_area.get_rect().centery)
+pygame.draw.circle(play_area, PLAY_AREA_COLOR, circlepos, 350)
+
 
 bullets = []
 
@@ -41,7 +50,7 @@ def handle_input():
   if keys[K_z]:
     player1.fire( 0 )
 
-  player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0)),5)
+  #player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0)),5)
 
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -188,7 +197,7 @@ class Bullet:
 
 
 
-joystick.init()
+
 clock = pygame.time.Clock()
 
 # create the players
@@ -210,14 +219,23 @@ while 1:
        math.fabs( bullet.getY() - player1.getY() ) < player1.getRadius() ):
       player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
       bullets.remove( bullet )
+      break
 
     if ( math.fabs( bullet.getX() - player2.getX() ) < player2.getRadius() and
        math.fabs( bullet.getY() - player2.getY() ) < player2.getRadius() ):
       player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
       bullets.remove( bullet )
+      break
+
+    # Kill bullets out of bounds
+    if ( bullet.getX() > SCREEN_DIMENSIONS[0] or bullet.getX() < 0
+      or bullet.getY() > SCREEN_DIMENSIONS[1] or bullet.getY() < 0 ):
+      bullets.remove( bullet )
+      break
 
   # draw stuff
   screen.blit( bg, (0, 0) )
+  screen.blit( play_area, (0, 0) )
   player1.draw()
   player2.draw()
 
