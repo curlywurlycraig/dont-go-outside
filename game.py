@@ -11,6 +11,7 @@ BG_COLOR = (21, 35, 150)
 SCREEN_DIMENSIONS = (640, 480)
 PLAYER_COLOR = ( 51, 73, 160 )
 BULLET_COLOR = ( 100, 100, 255, 0 )
+DENSITY = 0.25
 
 screen = pygame.display.set_mode(SCREEN_DIMENSIONS, 0, 32)
 
@@ -22,19 +23,44 @@ pygame.display.flip()
 
 bullets = []
 
+updaterects = []
+
+friction = 1.1
 
 def handle_input():
+  keys = pygame.key.get_pressed()
+  if keys[K_DOWN]:
+    player1.force( (math.pi / 2, 10 ), 3 )
+  if keys[K_UP]:
+    player1.force( (math.pi / -2, 10 ), 3 )
+  if keys[K_LEFT]:
+    player1.force( (math.pi, 10 ), 3 )
+  if keys[K_RIGHT]:
+    player1.force( (0, 10 ), 3 )
+  if keys[K_z]:
+    player1.fire( 0 )
+
   for event in pygame.event.get():
     if event.type == QUIT:
       sys.exit()
     elif event.type == KEYDOWN:
-      sys.exit()
+      if event.key == K_ESCAPE:
+        sys.exit()
 
 def cart_from_polar( theta, distance, offset = (0,0) ):
   x = distance * math.cos( theta )
   y = distance * math.sin( theta )
-  result = (x + offset[0], y + offset[0])
+  result = (x + offset[0], y + offset[1])
   return result
+
+def polar_from_cart( x, y ):
+  return ( direction_from_cart( x, y ), magnitude_from_cart( x, y ) )
+
+def direction_from_cart( x, y ):
+  return math.atan2( y, x )
+
+def magnitude_from_cart( x, y ):
+  return math.sqrt( x * x + y * y )
 
 def filled_aacircle( surface, color, pos, radius ):
   aacircle( surface, color, pos, radius - 1)
@@ -54,6 +80,9 @@ def aacircle( surface, color, pos, radius, filled=True ):
 
   pygame.draw.aalines( surface, color, True, points, False )
 
+
+
+
 class Player:
   def __init__( self, x, y, radius ):
     self.x = x
@@ -66,65 +95,100 @@ class Player:
     self.x = x
     self.y = y
 
+  def move( self, x, y ):
+    self.x += x
+    self.y += y
+
   def getX( self ):
     return self.x
 
   def getY( self ):
     return self.y
 
+  def getRadius( self ):
+    return self.radius
+
   def draw( self ):
     diameter = 2 * self.radius
     player_surface = pygame.Surface( ( diameter, diameter ) )
     player_surface.set_colorkey( (0,0,0) )
     pygame.draw.circle( player_surface, PLAYER_COLOR, ( self.radius, self.radius ), self.radius )
-    screen.blit( player_surface, (int(self.x + self.radius), int(self.y + self.radius) ) )
+    screen.blit( player_surface, (int(self.x - self.radius), int(self.y - self.radius) ) )
+
+    updaterects.append( player_surface.get_rect())
 
   # dir is measured in radians as taken from "right"
-  def force( self, direction, magnitude ):
-    self.vy = magnitude * math.sin( direction )
-    self.vx = magnitude * math.cos( direction )
+  def force( self, polar, mass ):
+    direction = polar[0]
+    magnitude = polar[1]
+    self.vy += mass * magnitude * math.sin( direction ) / self.radius
+    self.vx += mass * magnitude * math.cos( direction ) / self.radius
 
   def update( self ):
     self.x += self.vx
     self.y += self.vy
 
-    self.vx = self.vx / 2
-    self.vy = self.vy / 2
+    self.vx = self.vx / friction
+    self.vy = self.vy / friction
 
   def fire( self, direction ):
-    fire_speed = 50
-    bullet_start_pos = cart_from_polar( direction, fire_speed )
-    bullets.append( Bullet( bullet_start_pos, direction, fire_speed ) )
+    fire_speed = 30
+    mass = 1
+    bullet_start_pos = cart_from_polar( direction, fire_speed, ( self.x, self.y ))
+    bullets.append( Bullet( bullet_start_pos, direction, fire_speed, mass ) )
+
+
+
+
 
 
 class Bullet:
-  def __init__( self, start_pos, direction, magnitude ):
+  def __init__( self, start_pos, direction, speed, mass ):
     self.x = start_pos[0]
     self.y = start_pos[1]
-    velocity = cart_from_polar( direction, magnitude )
+    velocity = cart_from_polar( direction, speed )
     self.vx = velocity[0]
     self.vy = velocity[1]
+    self.mass = mass
 
   def update( self ):
     self.x += self.vx
     self.y += self.vy
 
+  def getX( self ):
+    return self.x
+
+  def getY( self ):
+    return self.y
+
+  def getVX( self ):
+    return self.vx
+
+  def getVY( self ):
+    return self.vy
+
+  def getMass( self ):
+    return self.mass
+
   def draw( self ):
     length_scale = 0.5
-    bullet_surface = pygame.Surface ( ( int( self.vx + 3 ), int( self.vy + 3 ) ) )
+    size = self.mass / DENSITY
+    bullet_surface = pygame.Surface ( ( size, size ) )
     bullet_surface.set_colorkey( (0,0,0) )
-    pygame.draw.line( bullet_surface, BULLET_COLOR, (self.x, self.y ), (-1 * length_scale * self.vx, -1 * length_scale * self.vy), 3 )
-    
+    pygame.draw.circle( bullet_surface, BULLET_COLOR, ( int( size / 2 ), int( size / 2 ) ), int( size / 2 ) )
+    #pygame.draw.line( bullet_surface, BULLET_COLOR, (self.x, self.y ), (-1 * length_scale * self.vx, -1 * length_scale * self.vy), 3 )
 
-    drawPos = ( self.x - self.vx, self.y - self.vy )
+    drawPos = ( self.x, self.y )
     screen.blit( bullet_surface, drawPos )
+    updaterects.append( bullet_surface.get_rect())
+
+
+
+
 
 # create the players
-player1 = Player( 10, 10, 20 )
-player2 = Player( 100, 10, 20 )
-
-player1.fire( math.pi / 4.0 )
-
+player1 = Player( 20, 100, 20 )
+player2 = Player( 400, 100, 20 )
 
 while 1:
   handle_input()
@@ -135,9 +199,19 @@ while 1:
   for bullet in bullets:
     bullet.update()
 
+  # check for collisions
+  for bullet in bullets:
+    if ( math.fabs( bullet.getX() - player1.getX() ) < player1.getRadius() and
+       math.fabs( bullet.getY() - player1.getY() ) < player1.getRadius() ):
+      player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
+      bullets.remove( bullet )
+
+    if ( math.fabs( bullet.getX() - player2.getX() ) < player2.getRadius() and
+       math.fabs( bullet.getY() - player2.getY() ) < player2.getRadius() ):
+      player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
+      bullets.remove( bullet )
+
   # draw stuff
-  bg = pygame.Surface(SCREEN_DIMENSIONS)
-  bg.fill( BG_COLOR )
   screen.blit( bg, (0, 0) )
   player1.draw()
   player2.draw()
@@ -145,4 +219,5 @@ while 1:
   for bullet in bullets:
     bullet.draw()
 
-  pygame.display.flip()
+  pygame.display.update( updaterects )
+  updaterects = []
