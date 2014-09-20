@@ -2,6 +2,7 @@ import sys
 import pygame
 import math
 import code
+import joystick
 from pygame.locals import *
 
 pygame.init()
@@ -25,7 +26,7 @@ bullets = []
 
 updaterects = []
 
-friction = 1.1
+friction = 1.01
 
 def handle_input():
   keys = pygame.key.get_pressed()
@@ -39,6 +40,8 @@ def handle_input():
     player1.force( (0, 10 ), 3 )
   if keys[K_z]:
     player1.fire( 0 )
+
+  player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0)),5)
 
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -185,6 +188,8 @@ class Bullet:
 
 
 
+joystick.init()
+clock = pygame.time.Clock()
 
 # create the players
 player1 = Player( 20, 100, 20 )
@@ -219,5 +224,5 @@ while 1:
   for bullet in bullets:
     bullet.draw()
 
-  pygame.display.update( updaterects )
-  updaterects = []
+  pygame.display.flip()
+  clock.tick_busy_loop(60)
