@@ -2,7 +2,9 @@ import sys
 import pygame
 import math
 import code
+
 import joystick
+from maths import *
 from pygame.locals import *
 
 pygame.init()
@@ -59,38 +61,6 @@ def handle_input( t ):
       if event.key == K_ESCAPE:
         sys.exit()
 
-def cart_from_polar( theta, distance, offset = (0,0) ):
-  x = distance * math.cos( theta )
-  y = distance * math.sin( theta )
-  result = (x + offset[0], y + offset[1])
-  return result
-
-def polar_from_cart( x, y ):
-  return ( direction_from_cart( x, y ), magnitude_from_cart( x, y ) )
-
-def direction_from_cart( x, y ):
-  return math.atan2( y, x )
-
-def magnitude_from_cart( x, y ):
-  return math.sqrt( x * x + y * y )
-
-def filled_aacircle( surface, color, pos, radius ):
-  aacircle( surface, color, pos, radius - 1)
-  aacircle( surface, color, pos, radius )
-  aacircle( surface, color, pos, radius + 1)
-
-  pygame.draw.circle( surface, color, pos, radius + 1 )
-
-# use aalines to draw a nice antialiased circle
-def aacircle( surface, color, pos, radius, filled=True ):
-  points = []
-  resolution = 50
-  for i in range( resolution ):
-    theta = i * ( 2 * math.pi ) / ( resolution )
-    point = cart_from_polar( theta, radius, pos )
-    points.append( point )
-
-  pygame.draw.aalines( surface, color, True, points, False )
 
 
 
@@ -127,8 +97,6 @@ class Player:
     player_surface.set_colorkey( (0,0,0) )
     pygame.draw.circle( player_surface, PLAYER_COLOR, ( self.radius, self.radius ), self.radius )
     screen.blit( player_surface, (int(self.x - self.radius), int(self.y - self.radius) ) )
-
-    updaterects.append( player_surface.get_rect())
 
   # dir is measured in radians as taken from "right"
   def force( self, polar, mass ):
