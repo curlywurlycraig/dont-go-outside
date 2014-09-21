@@ -169,8 +169,17 @@ class Player:
   def isAlive( self ):
     return self.alive
 
+  def isBlocking( self ):
+    return self.blocking
+
   def setDirection( self, direction ):
     self.direction = direction
+
+  def getColor( self ):
+    return self.color
+
+  def getDirection( self ):
+    return self.direction
 
   def setPos( self, x, y ):
     self.x = x
@@ -265,7 +274,7 @@ class Player:
 
 
     bullet_start_pos = cart_from_polar( self.direction, self.radius + self.shotSize, ( self.x, self.y ))
-    bullets.append( Bullet( self.color, bullet_start_pos, self.direction, fire_speed, mass, self ) )
+    bullets.append( Bullet( self, bullet_start_pos, self.direction, fire_speed, mass ) )
 
     # Reset charging status
     self.shotSize = DEFAULT_SHOT_SIZE
@@ -273,15 +282,14 @@ class Player:
 
 
 class Bullet:
-  def __init__( self, color, start_pos, direction, speed, mass, owner ):
-    self.color = color
+  def __init__( self, owner, start_pos, direction, speed, mass ):
+    self.owner = owner
     self.x = start_pos[0]
     self.y = start_pos[1]
     velocity = cart_from_polar( direction, speed )
     self.vx = velocity[0]
     self.vy = velocity[1]
     self.mass = mass
-    self.owner = owner
 
   def update( self, t ):
     self.x += self.vx * t
@@ -308,12 +316,20 @@ class Bullet:
   def getRadius( self ):
     return self.mass / DENSITY
 
+  def deflect( self, deflector ):
+    self.owner = deflector
+    direction = deflector.getDirection()
+    speed = magnitude_from_cart( self.vx, self.vy )
+    velocity = cart_from_polar( direction, speed )
+    self.vx = velocity[0]
+    self.vy = velocity[1]
+
   def draw( self ):
     length_scale = 0.5
     size = self.mass / DENSITY
     bullet_surface = pygame.Surface ( ( size, size ) )
     bullet_surface.set_colorkey( (0,0,0) )
-    pygame.draw.circle( bullet_surface, self.color, ( int( size / 2 ), int( size / 2 ) ), int( size / 2 ) )
+    pygame.draw.circle( bullet_surface, self.owner.getColor(), ( int( size / 2 ), int( size / 2 ) ), int( size / 2 ) )
 
     drawPos = ( self.x - size/2, self.y - size/2 )
     screen.blit( bullet_surface, drawPos )
@@ -366,16 +382,22 @@ while 1:
     if ( math.fabs( bullet.getX() - player1.getX() ) < ( player1.getRadius() + bullet.getRadius() ) and
       math.fabs( bullet.getY() - player1.getY() ) < ( player1.getRadius() + bullet.getRadius() ) ):
       if bullet.getOwner() != player1:
-        player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-        if bullet not in bullets_for_removal:
-          bullets_for_removal.append( bullet )
+        if player1.isBlocking():
+          bullet.deflect( player1 )
+        else:
+          player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
+          if bullet not in bullets_for_removal:
+            bullets_for_removal.append( bullet )
 
     if ( math.fabs( bullet.getX() - player2.getX() ) < ( player2.getRadius() + bullet.getRadius() ) and
       math.fabs( bullet.getY() - player2.getY() ) < ( player2.getRadius() + bullet.getRadius() ) ):
       if bullet.getOwner() != player2:
-        player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-        if bullet not in bullets_for_removal:
-          bullets_for_removal.append( bullet )
+        if player2.isBlocking():
+          bullet.deflect( player2 )
+        else:
+          player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
+          if bullet not in bullets_for_removal:
+            bullets_for_removal.append( bullet )
 
     # Kill bullets out of bounds
     if ( bullet.getX() > SCREEN_DIMENSIONS[0] or bullet.getX() < 0
