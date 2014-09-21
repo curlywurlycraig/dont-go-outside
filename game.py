@@ -13,7 +13,7 @@ joystick.init()
 
 BG_COLOR = (0, 0, 50)
 SCREEN_DIMENSIONS = (800, 600)
-PLAYER1_COLOR = ( 51, 73, 160 )
+PLAYER1_COLOR = ( 51, 100, 255 )
 PLAYER2_COLOR = ( 160, 73, 51 )
 TEXT_COLOR = ( 255, 255, 255 )
 RETICULE_DISTANCE = 10
@@ -76,8 +76,10 @@ p2_win.blit(start_text, startpos)
 
 # GUI Elements
 special_text = font16.render("Blink:", True, TEXT_COLOR)
-special_bar_back = pygame.Surface((210, 34))
-special_bar_back.fill((10,10,10))
+special_bar_back_1 = pygame.Surface((210, 34))
+special_bar_back_1.fill(PLAYER1_COLOR)
+special_bar_back_2 = pygame.Surface((210, 34))
+special_bar_back_2.fill(PLAYER2_COLOR)
 special_bar_empty = pygame.Surface((200, 26))
 special_bar_empty.fill((0,84,60))
 
@@ -291,7 +293,7 @@ class Player:
 
   def has_blocked( self, mass ):
     self.hasBlocked = True
-    self.boostAmount += mass
+    self.boostAmount += mass*2
     if self.boostAmount > 100: self.boostAmount = 100
 
   def fire( self ):
@@ -460,8 +462,8 @@ while 1:
       winner = player1
 
   # Generate GUI
-  gui_overlay.blit(special_bar_back, (25, 540))
-  gui_overlay.blit(special_bar_back, (565, 540))
+  gui_overlay.blit(special_bar_back_1, (25, 540))
+  gui_overlay.blit(special_bar_back_2, (565, 540))
   gui_overlay.blit(special_bar_empty, (30, 544))
   gui_overlay.blit(special_bar_empty, (570, 544))
 
