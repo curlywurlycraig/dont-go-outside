@@ -11,14 +11,13 @@ from pygame.locals import *
 pygame.init()
 joystick.init()
 
-BG_COLOR = (21, 35, 150)
-
+BG_COLOR = (0, 0, 50)
 SCREEN_DIMENSIONS = (800, 600)
 PLAYER1_COLOR = ( 51, 73, 160 )
 PLAYER2_COLOR = ( 160, 73, 51 )
 TEXT_COLOR = ( 255, 255, 255 )
 RETICULE_DISTANCE = 10
-PLAY_AREA_COLOR = ( 0, 0, 50 )
+PLAY_AREA_COLOR = ( 21, 35, 150 )
 PLAY_AREA_RADIUS = 275
 BULLET_COLOR = ( 100, 100, 255, 0 )
 JOYPAD_CALIBRATION = 10000
@@ -266,7 +265,7 @@ class Player:
 
 
     bullet_start_pos = cart_from_polar( self.direction, self.radius + self.shotSize, ( self.x, self.y ))
-    bullets.append( Bullet( self.color, bullet_start_pos, self.direction, fire_speed, mass ) )
+    bullets.append( Bullet( self.color, bullet_start_pos, self.direction, fire_speed, mass, self ) )
 
     # Reset charging status
     self.shotSize = DEFAULT_SHOT_SIZE
@@ -274,7 +273,7 @@ class Player:
 
 
 class Bullet:
-  def __init__( self, color, start_pos, direction, speed, mass ):
+  def __init__( self, color, start_pos, direction, speed, mass, owner ):
     self.color = color
     self.x = start_pos[0]
     self.y = start_pos[1]
@@ -282,10 +281,14 @@ class Bullet:
     self.vx = velocity[0]
     self.vy = velocity[1]
     self.mass = mass
+    self.owner = owner
 
   def update( self, t ):
     self.x += self.vx * t
     self.y += self.vy * t
+
+  def getOwner(self):
+    return self.owner
 
   def getX( self ):
     return self.x
@@ -344,7 +347,7 @@ winner = None
 
 music_file = "res/music.wav"
 music = pygame.mixer.Sound( music_file )
-music.set_volume( 0.5 )
+music.set_volume( 0.25 )
 music.play(loops=-1)
 while 1:
   t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
@@ -361,16 +364,18 @@ while 1:
   for bullet in bullets:
     # check for collisions
     if ( math.fabs( bullet.getX() - player1.getX() ) < ( player1.getRadius() + bullet.getRadius() ) and
-       math.fabs( bullet.getY() - player1.getY() ) < ( player1.getRadius() + bullet.getRadius() ) ):
-      player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-      if bullet not in bullets_for_removal:
-        bullets_for_removal.append( bullet )
+      math.fabs( bullet.getY() - player1.getY() ) < ( player1.getRadius() + bullet.getRadius() ) ):
+      if bullet.getOwner() != player1:
+        player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
+        if bullet not in bullets_for_removal:
+          bullets_for_removal.append( bullet )
 
     if ( math.fabs( bullet.getX() - player2.getX() ) < ( player2.getRadius() + bullet.getRadius() ) and
-       math.fabs( bullet.getY() - player2.getY() ) < ( player2.getRadius() + bullet.getRadius() ) ):
-      player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-      if bullet not in bullets_for_removal:
-        bullets_for_removal.append( bullet )
+      math.fabs( bullet.getY() - player2.getY() ) < ( player2.getRadius() + bullet.getRadius() ) ):
+      if bullet.getOwner() != player2:
+        player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
+        if bullet not in bullets_for_removal:
+          bullets_for_removal.append( bullet )
 
     # Kill bullets out of bounds
     if ( bullet.getX() > SCREEN_DIMENSIONS[0] or bullet.getX() < 0
