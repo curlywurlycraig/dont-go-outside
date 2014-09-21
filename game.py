@@ -128,6 +128,7 @@ def handle_input( t ):
           if event.joy == 0:
             player1.block()
           elif event.joy == 1:
+
             player2.block()
     elif event.type == JOYBUTTONUP:
       if event.button == 5: # R1/RB
@@ -214,8 +215,8 @@ class Player:
       top_left = ( self.x - self.radius - ARC_DISTANCE, self.y - self.radius - ARC_DISTANCE )
       width_height = diameter + ARC_DISTANCE * 2
 
-      arc_start = self.direction - self.blockSize / 2
-      arc_end = self.direction + self.blockSize / 2
+      arc_start = self.direction + self.blockSize / 2
+      arc_end = self.direction - self.blockSize / 2
       pygame.draw.arc( block_surface, self.color, pygame.Rect( (0, 0), ( width_height, width_height ) ), arc_start, arc_end, 2 )
       screen.blit( block_surface, top_left )
 
