@@ -8,7 +8,7 @@ from maths import *
 from pygame.locals import *
 
 pygame.init()
-#joystick.init()
+joystick.init()
 
 BG_COLOR = (21, 35, 150)
 
@@ -19,8 +19,8 @@ RETICULE_DISTANCE = 10
 PLAY_AREA_COLOR = ( 0, 0, 50 )
 BULLET_COLOR = ( 100, 100, 255, 0 )
 JOYPAD_CALIBRATION = 10000
-MAX_SHOT_SIZE = 10
-DEFAULT_SHOT_SIZE = 1
+MAX_SHOT_SIZE = 40
+DEFAULT_SHOT_SIZE = 5
 DENSITY = 1
 
 screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.HWSURFACE, 16)
@@ -57,11 +57,11 @@ def handle_input( t ):
   if keys[K_z]:
     player1.fire( 0 )
 
-  #player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
-  #player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
+  player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
+  player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
-  #player1.setDirection((joystick.get_stick_direction(0,1)))
-  #player2.setDirection((joystick.get_stick_direction(1,1)))
+  player1.setDirection((joystick.get_stick_direction(0,1)))
+  player2.setDirection((joystick.get_stick_direction(1,1)))
 
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -78,9 +78,9 @@ def handle_input( t ):
     elif event.type == JOYBUTTONUP:
       if event.button == 5: # R1/RB
         if event.joy == 0:
-          player1.fire(0)
+          player1.fire()
         elif event.joy == 1:
-          player2.fire(0)
+          player2.fire()
 
 
 
@@ -163,11 +163,11 @@ class Player:
   def startCharging( self ):
     self.isCharging = True
 
-  def fire( self, direction ):
+  def fire( self ):
     fire_speed = 500
     mass = self.shotSize
-    bullet_start_pos = cart_from_polar( direction, self.radius, ( self.x, self.y ))
-    bullets.append( Bullet( bullet_start_pos, direction, fire_speed, mass ) )
+    bullet_start_pos = cart_from_polar( self.direction, self.radius, ( self.x, self.y ))
+    bullets.append( Bullet( bullet_start_pos, self.direction, fire_speed, mass ) )
 
     # Reset charging status
     self.shotSize = DEFAULT_SHOT_SIZE
