@@ -55,7 +55,7 @@ def handle_input( t ):
   if keys[K_RIGHT]:
     player1.force( (0, 10000 * t ), 1 )
   if keys[K_z]:
-    player1.fire( 0 )
+    player1.fire( )
 
   #player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
   #player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
@@ -128,11 +128,12 @@ class Player:
 
     # draw the reticule
     reticule_size = self.shotSize
-    reticule_surface = pygame.Surface( ( int( reticule_size ), int( reticule_size )  ) )
+    print reticule_size
+    reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
     reticule_surface.set_colorkey( (0,0,0) )
-    reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE + reticule_size / 2, ( self.x, self.y ) )
+    reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE + self.shotSize/2, ( self.x, self.y ) )
     reticule_pos = ( int( reticule_pos[0] - reticule_size / 2.0), int( reticule_pos[1] - reticule_size / 2.0 ) )
-    pygame.draw.circle( reticule_surface, self.color, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), int(reticule_size / 2) )
+    pygame.draw.circle( reticule_surface, self.color, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), int(reticule_size/2) )
     pygame.transform.rotate( reticule_surface, degrees_from_radians( self.direction ) )
     screen.blit( reticule_surface, reticule_pos )
 
@@ -211,7 +212,7 @@ class Bullet:
     pygame.draw.circle( bullet_surface, BULLET_COLOR, ( int( size / 2 ), int( size / 2 ) ), int( size / 2 ) )
     #pygame.draw.line( bullet_surface, BULLET_COLOR, (self.x, self.y ), (-1 * length_scale * self.vx, -1 * length_scale * self.vy), 3 )
 
-    drawPos = ( self.x, self.y )
+    drawPos = ( self.x - size/2, self.y - size/2 )
     screen.blit( bullet_surface, drawPos )
     updaterects.append( bullet_surface.get_rect())
 
