@@ -110,10 +110,6 @@ class Player:
     reticule_size = 6
     reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
     reticule_surface.set_colorkey( (0,0,0) )
-    points = []
-    points.append( ( 0, reticule_size ) )
-    points.append( ( reticule_size, reticule_size ) )
-    points.append( ( int( reticule_size / 2 ), 0 ) )
     reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE, ( self.x, self.y ) )
     reticule_pos = ( int( reticule_pos[0] - reticule_size / 2.0), int( reticule_pos[1] - reticule_size / 2.0 ) )
     pygame.draw.circle( reticule_surface, RETICULE_COLOR, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), 2 )
