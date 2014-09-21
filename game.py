@@ -35,7 +35,7 @@ bullets = []
 
 updaterects = []
 
-friction = 15
+friction = 1
 
 def handle_input( t ):
   keys = pygame.key.get_pressed()
@@ -141,8 +141,9 @@ class Player:
     self.x += self.vx * t
     self.y += self.vy * t
 
-    self.vx = self.vx / ( friction * t )
-    self.vy = self.vy / ( friction * t )
+
+    self.vx = self.vx / ( 1 + friction * t )
+    self.vy = self.vy / ( 1 + friction * t )
 
   def fire( self, direction ):
     fire_speed = 500
