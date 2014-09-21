@@ -15,3 +15,6 @@ def direction_from_cart( x, y ):
 
 def magnitude_from_cart( x, y ):
   return math.sqrt( x * x + y * y )
+
+def degrees_from_radians( rads ):
+  return ( rads / 2 * math.pi ) * 360

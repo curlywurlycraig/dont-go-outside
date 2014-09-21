@@ -8,12 +8,14 @@ from maths import *
 from pygame.locals import *
 
 pygame.init()
-joystick.init()
+#joystick.init()
 
 BG_COLOR = (21, 35, 150)
 
 SCREEN_DIMENSIONS = (800, 600)
 PLAYER_COLOR = ( 51, 73, 160 )
+RETICULE_COLOR = ( 51, 73, 160 )
+RETICULE_DISTANCE = 10
 PLAY_AREA_COLOR = ( 0, 0, 50 )
 BULLET_COLOR = ( 100, 100, 255, 0 )
 JOYPAD_CALIBRATION = 10000
@@ -53,8 +55,8 @@ def handle_input( t ):
   if keys[K_z]:
     player1.fire( 0 )
 
-  player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
-  player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
+  #player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
+  #player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -69,12 +71,16 @@ def handle_input( t ):
 
 
 class Player:
-  def __init__( self, x, y, radius ):
+  def __init__( self, x, y, radius, direction ):
     self.x = x
     self.y = y
     self.vx = 0
     self.vy = 0
     self.radius = radius
+    self.direction = direction
+
+  def setDirection( self, direction ):
+    self.direction = direction
 
   def setPos( self, x, y ):
     self.x = x
@@ -99,6 +105,20 @@ class Player:
     player_surface.set_colorkey( (0,0,0) )
     pygame.draw.circle( player_surface, PLAYER_COLOR, ( self.radius, self.radius ), self.radius )
     screen.blit( player_surface, (int(self.x - self.radius), int(self.y - self.radius) ) )
+
+    # draw the reticule
+    reticule_size = 6
+    reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
+    reticule_surface.set_colorkey( (0,0,0) )
+    points = []
+    points.append( ( 0, reticule_size ) )
+    points.append( ( reticule_size, reticule_size ) )
+    points.append( ( int( reticule_size / 2 ), 0 ) )
+    reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE, ( self.x, self.y ) )
+    reticule_pos = ( int( reticule_pos[0] - reticule_size / 2.0), int( reticule_pos[1] - reticule_size / 2.0 ) )
+    pygame.draw.circle( reticule_surface, RETICULE_COLOR, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), 2 )
+    pygame.transform.rotate( reticule_surface, degrees_from_radians( self.direction ) )
+    screen.blit( reticule_surface, reticule_pos )
 
   # dir is measured in radians as taken from "right"
   def force( self, polar, mass ):
@@ -171,8 +191,8 @@ class Bullet:
 clock = pygame.time.Clock()
 
 # create the players
-player1 = Player( 20, 100, 20 )
-player2 = Player( 400, 100, 20 )
+player1 = Player( 20, 100, 20, 0 )
+player2 = Player( 400, 100, 20, math.pi )
 
 while 1:
   t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
