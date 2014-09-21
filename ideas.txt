@@ -11,3 +11,11 @@ increasing
 
 This percentage value could be multiplied into the force calculations on the
 player (for example).
+
+
+
+
+Sound Effects:
+	Have fire sound of increasing intensity.
+	The sound files can be named "fire1.wav", "fire2.wav" and then
+	the power of fire can be converted to a number in this range
