@@ -17,6 +17,7 @@ PLAYER1_COLOR = ( 51, 73, 160 )
 PLAYER2_COLOR = ( 160, 73, 51 )
 RETICULE_DISTANCE = 10
 PLAY_AREA_COLOR = ( 0, 0, 50 )
+PLAY_AREA_RADIUS = 275
 BULLET_COLOR = ( 100, 100, 255, 0 )
 JOYPAD_CALIBRATION = 10000
 MAX_SHOT_SIZE = 40
@@ -35,7 +36,7 @@ pygame.display.flip()
 play_area = pygame.Surface(SCREEN_DIMENSIONS)
 play_area.set_colorkey( (0, 0, 0) )
 circlepos = (play_area.get_rect().centerx, play_area.get_rect().centery)
-pygame.draw.circle(play_area, PLAY_AREA_COLOR, circlepos, 275)
+pygame.draw.circle(play_area, PLAY_AREA_COLOR, circlepos, PLAY_AREA_RADIUS)
 
 
 bullets = []
@@ -58,13 +59,13 @@ def handle_input( t ):
     player1.fire( )
 
   if joystick.get_joypad_count() > 1:
-    player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
-    player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
+    if player1.isAlive(): player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
+    if player2.isAlive(): player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
     if (joystick.get_stick_magnitude(0,1) > 0.5):
-      player1.setDirection((joystick.get_stick_direction(0,1)))
+      if player1.isAlive(): player1.setDirection((joystick.get_stick_direction(0,1)))
     if (joystick.get_stick_magnitude(1,1) > 0.5):
-      player2.setDirection((joystick.get_stick_direction(1,1)))
+      if player2.isAlive(): player2.setDirection((joystick.get_stick_direction(1,1)))
 
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -75,15 +76,15 @@ def handle_input( t ):
     elif event.type == JOYBUTTONDOWN:
       if event.button == 5: # R1/RB
         if event.joy == 0:
-          player1.startCharging()
+          if player1.isAlive(): player1.startCharging()
         elif event.joy == 1:
-          player2.startCharging()
+          if player2.isAlive(): player2.startCharging()
     elif event.type == JOYBUTTONUP:
       if event.button == 5: # R1/RB
         if event.joy == 0:
-          player1.fire()
+          if player1.isAlive(): player1.fire()
         elif event.joy == 1:
-          player2.fire()
+          if player2.isAlive(): player2.fire()
 
 
 
@@ -101,6 +102,13 @@ class Player:
     self.shotSize = DEFAULT_SHOT_SIZE
     self.radius = radius
     self.direction = direction
+    self.alive = True
+
+  def kill( self ):
+    self.alive = False
+
+  def isAlive( self ):
+    return self.alive
 
   def setDirection( self, direction ):
     self.direction = direction
@@ -126,7 +134,7 @@ class Player:
     diameter = 2 * self.radius
     player_surface = pygame.Surface( ( diameter, diameter ) )
     player_surface.set_colorkey( (0,0,0) )
-    pygame.draw.circle( player_surface, self.color, ( self.radius, self.radius ), self.radius )
+    pygame.draw.circle( player_surface, self.color, ( int(self.radius), int(self.radius) ), int(self.radius) )
     screen.blit( player_surface, (int(self.x - self.radius), int(self.y - self.radius) ) )
 
     # draw the reticule
@@ -148,18 +156,22 @@ class Player:
     self.vx += mass * magnitude * math.cos( direction ) / self.radius
 
   def update( self, t ):
-    self.x += self.vx * t
-    self.y += self.vy * t
+    if not self.alive:
+      self.radius -= .2
+      if self.radius < 0:
+        self.radius = 0
+    else:
+      self.x += self.vx * t
+      self.y += self.vy * t
 
+      self.vx = self.vx / ( 1 + friction * t )
+      self.vy = self.vy / ( 1 + friction * t )
 
-    self.vx = self.vx / ( 1 + friction * t )
-    self.vy = self.vy / ( 1 + friction * t )
-
-    # Grow bullets
-    if self.isCharging:
-      self.shotSize += 0.1
-      if self.shotSize > MAX_SHOT_SIZE:
-        self.shotSize = MAX_SHOT_SIZE
+      # Grow bullets
+      if self.isCharging:
+        self.shotSize += 0.1
+        if self.shotSize > MAX_SHOT_SIZE:
+          self.shotSize = MAX_SHOT_SIZE
 
   def startCharging( self ):
     self.isCharging = True
@@ -224,8 +236,13 @@ class Bullet:
 clock = pygame.time.Clock()
 
 # create the players
-player1 = Player( PLAYER1_COLOR, 20, 100, 20, 0 )
-player2 = Player( PLAYER2_COLOR, 400, 100, 20, math.pi )
+screen_pos = screen.get_rect()
+p1x = screen_pos.centerx - 100
+p2x = screen_pos.centerx + 100
+py = screen_pos.centery
+player1 = Player( PLAYER1_COLOR, p1x, py, 20, 0 )
+player2 = Player( PLAYER2_COLOR, p2x, py, 20, math.pi )
+winner = None
 
 while 1:
   t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
@@ -258,6 +275,13 @@ while 1:
 
   for bullet in bullets_for_removal:
     bullets.remove( bullet )
+
+  if ((player1.getX() - screen_pos.centerx)**2 + (player1.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
+    player1.kill()
+    winner = player2
+  elif ((player2.getX()-screen_pos.centerx)**2 + (player2.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
+    player2.kill()
+    winner = player1
 
   # draw stuff
   screen.blit( bg, (0, 0) )
