@@ -212,27 +212,29 @@ while 1:
   player1.update( t )
   player2.update( t )
 
+  bullets_for_removal = []
   for bullet in bullets:
     bullet.update( t )
 
+  for bullet in bullets:
     # check for collisions
     if ( math.fabs( bullet.getX() - player1.getX() ) < player1.getRadius() and
        math.fabs( bullet.getY() - player1.getY() ) < player1.getRadius() ):
       player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-      bullets.remove( bullet )
-      break
+      bullets_for_removal.append( bullet )
 
     if ( math.fabs( bullet.getX() - player2.getX() ) < player2.getRadius() and
        math.fabs( bullet.getY() - player2.getY() ) < player2.getRadius() ):
       player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-      bullets.remove( bullet )
-      break
+      bullets_for_removal.append( bullet )
 
     # Kill bullets out of bounds
     if ( bullet.getX() > SCREEN_DIMENSIONS[0] or bullet.getX() < 0
       or bullet.getY() > SCREEN_DIMENSIONS[1] or bullet.getY() < 0 ):
-      bullets.remove( bullet )
-      break
+      bullets_for_removal.append( bullet )
+
+  for bullet in bullets_for_removal:
+    bullets.remove( bullet )
 
   # draw stuff
   screen.blit( bg, (0, 0) )
