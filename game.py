@@ -15,6 +15,8 @@ PLAYER_COLOR = ( 51, 73, 160 )
 PLAY_AREA_COLOR = ( 0, 0, 50 )
 BULLET_COLOR = ( 100, 100, 255, 0 )
 JOYPAD_CALIBRATION = 10000
+MAX_SHOT_SIZE = 10
+DEFAULT_SHOT_SIZE = 1
 DENSITY = 1
 
 screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.HWSURFACE, 16)
@@ -54,12 +56,27 @@ def handle_input( t ):
   player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
   player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
+  #player1.setDirection((joystick.get_stick_direction(0,1)))
+  #player2.setDirection((joystick.get_stick_direction(1,1)))
+
   for event in pygame.event.get():
     if event.type == QUIT:
       sys.exit()
     elif event.type == KEYDOWN:
       if event.key == K_ESCAPE:
         sys.exit()
+    elif event.type == JOYBUTTONDOWN:
+      if event.button == 5: # R1/RB
+        if event.joy == 0:
+          player1.startCharging()
+        elif event.joy == 1:
+          player2.startCharging()
+    elif event.type == JOYBUTTONUP:
+      if event.button == 5: # R1/RB
+        if event.joy == 0:
+          player1.fire(0)
+        elif event.joy == 1:
+          player2.fire(0)
 
 def cart_from_polar( theta, distance, offset = (0,0) ):
   x = distance * math.cos( theta )
@@ -104,6 +121,8 @@ class Player:
     self.y = y
     self.vx = 0
     self.vy = 0
+    self.isCharging = False
+    self.shotSize = DEFAULT_SHOT_SIZE
     self.radius = radius
 
   def setPos( self, x, y ):
@@ -147,11 +166,24 @@ class Player:
     self.vx = self.vx / ( 1 + friction * t )
     self.vy = self.vy / ( 1 + friction * t )
 
+    # Grow bullets
+    if self.isCharging:
+      self.shotSize += 0.1
+      if self.shotSize > MAX_SHOT_SIZE:
+        self.shotSize = MAX_SHOT_SIZE
+
+  def startCharging( self ):
+    self.isCharging = True
+
   def fire( self, direction ):
     fire_speed = 500
-    mass = 2
+    mass = self.shotSize
     bullet_start_pos = cart_from_polar( direction, self.radius, ( self.x, self.y ))
     bullets.append( Bullet( bullet_start_pos, direction, fire_speed, mass ) )
+
+    # Reset charging status
+    self.shotSize = DEFAULT_SHOT_SIZE
+    self.isCharging = False
 
 
 
