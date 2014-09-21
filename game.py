@@ -57,11 +57,12 @@ def handle_input( t ):
   if keys[K_z]:
     player1.fire( )
 
-  #player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
-  #player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
+  if joystick.get_joypad_count() > 1:
+    player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
+    player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
-  #player1.setDirection((joystick.get_stick_direction(0,1)))
-  #player2.setDirection((joystick.get_stick_direction(1,1)))
+    player1.setDirection((joystick.get_stick_direction(0,1)))
+    player2.setDirection((joystick.get_stick_direction(1,1)))
 
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -178,6 +179,7 @@ class Player:
 
 class Bullet:
   def __init__( self, color, start_pos, direction, speed, mass ):
+    self.color = color
     self.x = start_pos[0]
     self.y = start_pos[1]
     velocity = cart_from_polar( direction, speed )
@@ -209,8 +211,7 @@ class Bullet:
     size = self.mass / DENSITY
     bullet_surface = pygame.Surface ( ( size, size ) )
     bullet_surface.set_colorkey( (0,0,0) )
-    pygame.draw.circle( bullet_surface, BULLET_COLOR, ( int( size / 2 ), int( size / 2 ) ), int( size / 2 ) )
-    #pygame.draw.line( bullet_surface, BULLET_COLOR, (self.x, self.y ), (-1 * length_scale * self.vx, -1 * length_scale * self.vy), 3 )
+    pygame.draw.circle( bullet_surface, self.color, ( int( size / 2 ), int( size / 2 ) ), int( size / 2 ) )
 
     drawPos = ( self.x - size/2, self.y - size/2 )
     screen.blit( bullet_surface, drawPos )
