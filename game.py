@@ -8,14 +8,15 @@ from maths import *
 from pygame.locals import *
 
 pygame.init()
-#joystick.init()
+joystick.init()
 
 BG_COLOR = (21, 35, 150)
 
-SCREEN_DIMENSIONS = (1024, 768)
+SCREEN_DIMENSIONS = (800, 600)
 PLAYER_COLOR = ( 51, 73, 160 )
 PLAY_AREA_COLOR = ( 0, 0, 50 )
 BULLET_COLOR = ( 100, 100, 255, 0 )
+JOYPAD_CALIBRATION = 10000
 DENSITY = 1
 
 screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.HWSURFACE, 16)
@@ -30,7 +31,7 @@ pygame.display.flip()
 play_area = pygame.Surface(SCREEN_DIMENSIONS)
 play_area.set_colorkey( (0, 0, 0) )
 circlepos = (play_area.get_rect().centerx, play_area.get_rect().centery)
-pygame.draw.circle(play_area, PLAY_AREA_COLOR, circlepos, 350)
+pygame.draw.circle(play_area, PLAY_AREA_COLOR, circlepos, 275)
 
 
 bullets = []
@@ -52,7 +53,8 @@ def handle_input( t ):
   if keys[K_z]:
     player1.fire( 0 )
 
-  #player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0)),5)
+  player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
+  player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
   for event in pygame.event.get():
     if event.type == QUIT:
