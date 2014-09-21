@@ -11,6 +11,9 @@ def init():
   for pad in joypads:
     pad.init()
 
+def get_joypad_count():
+  return len( joypads )
+
 def get_stick_direction( pad_number, stick ):
   if stick == 0:
     axis0 = joypads[pad_number].get_axis(0)
