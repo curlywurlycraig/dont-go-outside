@@ -242,6 +242,12 @@ class Player:
       top_left = ( self.x - self.radius - ARC_DISTANCE, self.y - self.radius - ARC_DISTANCE )
       width_height = diameter + ARC_DISTANCE * 2
 
+      # get opacity between 0 and 255
+      opacity = 1 - float( pygame.time.get_ticks() - self.lastBlock ) / BLOCK_WINDOW
+      opacity = int( opacity * 255 )
+      block_surface.set_alpha( opacity )
+
+
       arc_start = -1 * self.direction - self.blockSize / 2
       arc_end = -1 * self.direction + self.blockSize / 2
       pygame.draw.arc( block_surface, self.color, pygame.Rect( (0, 0), ( width_height, width_height ) ), arc_start, arc_end, 2 )
