@@ -59,8 +59,8 @@ def handle_input( t ):
     player1.fire( )
 
   if joystick.get_joypad_count() > 1:
-    if player1.isAlive(): player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
-    if player2.isAlive(): player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
+    if winner==None: player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
+    if winner==None: player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
     if (joystick.get_stick_magnitude(0,1) > 0.5):
       if player1.isAlive(): player1.setDirection((joystick.get_stick_direction(0,1)))
@@ -76,15 +76,15 @@ def handle_input( t ):
     elif event.type == JOYBUTTONDOWN:
       if event.button == 5: # R1/RB
         if event.joy == 0:
-          if player1.isAlive(): player1.startCharging()
+          if winner==None: player1.startCharging()
         elif event.joy == 1:
-          if player2.isAlive(): player2.startCharging()
+          if winner==None: player2.startCharging()
     elif event.type == JOYBUTTONUP:
       if event.button == 5: # R1/RB
         if event.joy == 0:
-          if player1.isAlive(): player1.fire()
+          if winner==None: player1.fire()
         elif event.joy == 1:
-          if player2.isAlive(): player2.fire()
+          if winner==None: player2.fire()
 
 
 
@@ -138,14 +138,15 @@ class Player:
     screen.blit( player_surface, (int(self.x - self.radius), int(self.y - self.radius) ) )
 
     # draw the reticule
-    reticule_size = self.shotSize
-    reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
-    reticule_surface.set_colorkey( (0,0,0) )
-    reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE + self.shotSize/2, ( self.x, self.y ) )
-    reticule_pos = ( int( reticule_pos[0] - reticule_size / 2.0), int( reticule_pos[1] - reticule_size / 2.0 ) )
-    pygame.draw.circle( reticule_surface, self.color, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), int(reticule_size/2) )
-    pygame.transform.rotate( reticule_surface, degrees_from_radians( self.direction ) )
-    screen.blit( reticule_surface, reticule_pos )
+    if self.alive:
+      reticule_size = self.shotSize
+      reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
+      reticule_surface.set_colorkey( (0,0,0) )
+      reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE + self.shotSize/2, ( self.x, self.y ) )
+      reticule_pos = ( int( reticule_pos[0] - reticule_size / 2.0), int( reticule_pos[1] - reticule_size / 2.0 ) )
+      pygame.draw.circle( reticule_surface, self.color, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), int(reticule_size/2) )
+      pygame.transform.rotate( reticule_surface, degrees_from_radians( self.direction ) )
+      screen.blit( reticule_surface, reticule_pos )
 
   # dir is measured in radians as taken from "right"
   def force( self, polar, mass ):
