@@ -226,6 +226,9 @@ class Bullet:
   def getMass( self ):
     return self.mass
 
+  def getRadius( self ):
+    return self.mass / DENSITY
+
   def draw( self ):
     length_scale = 0.5
     size = self.mass / DENSITY
@@ -250,6 +253,10 @@ player1 = Player( PLAYER1_COLOR, p1x, py, 20, 0 )
 player2 = Player( PLAYER2_COLOR, p2x, py, 20, math.pi )
 winner = None
 
+music_file = "res/music.wav"
+music = pygame.mixer.Sound( music_file )
+music.set_volume( 0.5 )
+music.play()
 while 1:
   t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
 
@@ -264,14 +271,14 @@ while 1:
 
   for bullet in bullets:
     # check for collisions
-    if ( math.fabs( bullet.getX() - player1.getX() ) < player1.getRadius() and
-       math.fabs( bullet.getY() - player1.getY() ) < player1.getRadius() ):
+    if ( math.fabs( bullet.getX() - player1.getX() ) < ( player1.getRadius() + bullet.getRadius() ) and
+       math.fabs( bullet.getY() - player1.getY() ) < ( player1.getRadius() + bullet.getRadius() ) ):
       player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
       if bullet not in bullets_for_removal:
         bullets_for_removal.append( bullet )
 
-    if ( math.fabs( bullet.getX() - player2.getX() ) < player2.getRadius() and
-       math.fabs( bullet.getY() - player2.getY() ) < player2.getRadius() ):
+    if ( math.fabs( bullet.getX() - player2.getX() ) < ( player2.getRadius() + bullet.getRadius() ) and
+       math.fabs( bullet.getY() - player2.getY() ) < ( player2.getRadius() + bullet.getRadius() ) ):
       player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
       if bullet not in bullets_for_removal:
         bullets_for_removal.append( bullet )
