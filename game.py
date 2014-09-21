@@ -232,6 +232,10 @@ clock = pygame.time.Clock()
 player1 = Player( PLAYER1_COLOR, 20, 100, 20, 0 )
 player2 = Player( PLAYER2_COLOR, 400, 100, 20, math.pi )
 
+music_file = "res/music.wav"
+music = pygame.mixer.Sound( music_file )
+music.set_volume( 0.5 )
+music.play()
 while 1:
   t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
 
