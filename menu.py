@@ -68,7 +68,7 @@ def draw( screen ):
   background.fill(bgCol)
 
   # Initialize and draw title to background
-  font = pygame.font.Font(None, 64)
+  font = pygame.font.Font("res/Jawbreaker.ttf", 128)
   text = font.render("Don't go Outside!", True , fontCol)
   textpos = text.get_rect()
   textpos.centerx = background.get_rect().centerx
@@ -82,9 +82,9 @@ def draw( screen ):
   buttons.set_colorkey((0,255,0))
 
   # Draw the buttons
-  b1 = drawButton(buttons, "Best of 1", 200)
-  b2 = drawButton(buttons, "Best of 3", 250)
-  b3 = drawButton(buttons, "Best of 5", 300)
+  b1 = drawButton(buttons, "Best of 1", 250)
+  b2 = drawButton(buttons, "Best of 3", 300)
+  b3 = drawButton(buttons, "Best of 5", 350)
   global buttonPositions
   buttonPositions = [b1,b2,b3]
 

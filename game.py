@@ -16,6 +16,7 @@ BG_COLOR = (21, 35, 150)
 SCREEN_DIMENSIONS = (800, 600)
 PLAYER1_COLOR = ( 51, 73, 160 )
 PLAYER2_COLOR = ( 160, 73, 51 )
+TEXT_COLOR = ( 255, 255, 255 )
 RETICULE_DISTANCE = 10
 PLAY_AREA_COLOR = ( 0, 0, 50 )
 PLAY_AREA_RADIUS = 275
@@ -38,6 +39,38 @@ play_area = pygame.Surface(SCREEN_DIMENSIONS)
 play_area.set_colorkey( (0, 0, 0) )
 circlepos = (play_area.get_rect().centerx, play_area.get_rect().centery)
 pygame.draw.circle(play_area, PLAY_AREA_COLOR, circlepos, PLAY_AREA_RADIUS)
+
+# Define winner screens
+font64 = pygame.font.Font(None, 64)
+font16 = pygame.font.Font(None, 16)
+
+p1_win = pygame.Surface(SCREEN_DIMENSIONS)
+p1_win.set_colorkey( (0,0,0) )
+p1_text = font64.render("P1 Wins!", True , TEXT_COLOR)
+
+p2_win = pygame.Surface(SCREEN_DIMENSIONS)
+p2_win.set_colorkey( (0,0,0) )
+p2_text = font64.render("P2 Wins!", True, TEXT_COLOR)
+
+start_text = font16.render("Press start to continue.", True, TEXT_COLOR)
+
+textpos1 = p1_text.get_rect()
+textpos2 = p2_text.get_rect()
+startpos = start_text.get_rect()
+
+textpos1.centerx = screen.get_rect().centerx
+textpos2.centerx = screen.get_rect().centerx
+startpos.centerx = screen.get_rect().centerx
+
+textpos1.centery = 300
+textpos2.centery = 300
+startpos.centery = 450
+
+p1_win.blit(p1_text, textpos1)
+p2_win.blit(p2_text, textpos2)
+p1_win.blit(start_text, startpos)
+p2_win.blit(start_text, startpos)
+
 
 
 bullets = []
@@ -74,7 +107,12 @@ def handle_input( t ):
     elif event.type == KEYDOWN:
       if event.key == K_ESCAPE:
         sys.exit()
+      if event.key == K_RETURN:
+        next_round()
     elif event.type == JOYBUTTONDOWN:
+      if event.button == 7: # Start
+        if not (winner == None):
+          next_round()
       if event.button == 5: # R1/RB
         if event.joy == 0:
           if player1.isAlive(): player1.startCharging()
@@ -190,7 +228,7 @@ class Player:
     sound.play()
 
 
-    bullet_start_pos = cart_from_polar( self.direction, self.radius, ( self.x, self.y ))
+    bullet_start_pos = cart_from_polar( self.direction, self.radius + self.shotSize, ( self.x, self.y ))
     bullets.append( Bullet( self.color, bullet_start_pos, self.direction, fire_speed, mass ) )
 
     # Reset charging status
@@ -241,9 +279,20 @@ class Bullet:
     screen.blit( bullet_surface, drawPos )
     updaterects.append( bullet_surface.get_rect())
 
-
+def next_round():
+  global player1
+  global player2
+  global winner
+  screen_pos = screen.get_rect()
+  p1x = screen_pos.centerx - 100
+  p2x = screen_pos.centerx + 100
+  py = screen_pos.centery
+  player1 = Player( PLAYER1_COLOR, p1x, py, 20, 0 )
+  player2 = Player( PLAYER2_COLOR, p2x, py, 20, math.pi )
+  winner = None
 
 number_of_rounds = 2*menu.draw(screen) + 1
+round_count = 1
 
 clock = pygame.time.Clock()
 
@@ -259,7 +308,7 @@ winner = None
 music_file = "res/music.wav"
 music = pygame.mixer.Sound( music_file )
 music.set_volume( 0.5 )
-music.play()
+music.play(loops=-1)
 while 1:
   t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
 
@@ -295,18 +344,24 @@ while 1:
   for bullet in bullets_for_removal:
     bullets.remove( bullet )
 
-  if ((player1.getX() - screen_pos.centerx)**2 + (player1.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
-    player1.kill()
-    winner = player2
-  elif ((player2.getX()-screen_pos.centerx)**2 + (player2.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
-    player2.kill()
-    winner = player1
+  if winner == None:
+    if ((player1.getX() - screen_pos.centerx)**2 + (player1.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
+      player1.kill()
+      winner = player2
+    elif ((player2.getX()-screen_pos.centerx)**2 + (player2.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
+      player2.kill()
+      winner = player1
 
   # draw stuff
   screen.blit( bg, (0, 0) )
   screen.blit( play_area, (0, 0) )
   player1.draw()
   player2.draw()
+
+  if winner == player1:
+    screen.blit( p1_win, (0, 0) )
+  elif winner == player2:
+    screen.blit( p2_win, (0, 0) )
 
   for bullet in bullets:
     bullet.draw()
