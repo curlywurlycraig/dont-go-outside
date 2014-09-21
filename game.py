@@ -6,7 +6,7 @@ import joystick
 from pygame.locals import *
 
 pygame.init()
-joystick.init()
+#joystick.init()
 
 BG_COLOR = (21, 35, 150)
 
@@ -14,9 +14,9 @@ SCREEN_DIMENSIONS = (1024, 768)
 PLAYER_COLOR = ( 51, 73, 160 )
 PLAY_AREA_COLOR = ( 0, 0, 50 )
 BULLET_COLOR = ( 100, 100, 255, 0 )
-DENSITY = 0.25
+DENSITY = 1
 
-screen = pygame.display.set_mode(SCREEN_DIMENSIONS, 0, 32)
+screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.HWSURFACE, 16)
 
 # fill background
 bg = pygame.Surface(SCREEN_DIMENSIONS)
@@ -35,18 +35,18 @@ bullets = []
 
 updaterects = []
 
-friction = 1.01
+friction = 1.1
 
-def handle_input():
+def handle_input( t ):
   keys = pygame.key.get_pressed()
   if keys[K_DOWN]:
-    player1.force( (math.pi / 2, 10 ), 3 )
+    player1.force( (math.pi / 2, 10000 * t ), 1 )
   if keys[K_UP]:
-    player1.force( (math.pi / -2, 10 ), 3 )
+    player1.force( (math.pi / -2, 10000 * t ), 1 )
   if keys[K_LEFT]:
-    player1.force( (math.pi, 10 ), 3 )
+    player1.force( (math.pi, 10000 * t ), 1 )
   if keys[K_RIGHT]:
-    player1.force( (0, 10 ), 3 )
+    player1.force( (0, 10000 * t ), 1 )
   if keys[K_z]:
     player1.fire( 0 )
 
@@ -95,6 +95,7 @@ def aacircle( surface, color, pos, radius, filled=True ):
 
 
 
+
 class Player:
   def __init__( self, x, y, radius ):
     self.x = x
@@ -136,17 +137,17 @@ class Player:
     self.vy += mass * magnitude * math.sin( direction ) / self.radius
     self.vx += mass * magnitude * math.cos( direction ) / self.radius
 
-  def update( self ):
-    self.x += self.vx
-    self.y += self.vy
+  def update( self, t ):
+    self.x += self.vx * t
+    self.y += self.vy * t
 
-    self.vx = self.vx / friction
-    self.vy = self.vy / friction
+    self.vx = ( self.vx / friction )
+    self.vy = ( self.vy / friction )
 
   def fire( self, direction ):
-    fire_speed = 30
-    mass = 1
-    bullet_start_pos = cart_from_polar( direction, fire_speed, ( self.x, self.y ))
+    fire_speed = 500
+    mass = 2
+    bullet_start_pos = cart_from_polar( direction, self.radius, ( self.x, self.y ))
     bullets.append( Bullet( bullet_start_pos, direction, fire_speed, mass ) )
 
 
@@ -163,9 +164,9 @@ class Bullet:
     self.vy = velocity[1]
     self.mass = mass
 
-  def update( self ):
-    self.x += self.vx
-    self.y += self.vy
+  def update( self, t ):
+    self.x += self.vx * t
+    self.y += self.vy * t
 
   def getX( self ):
     return self.x
@@ -196,8 +197,6 @@ class Bullet:
 
 
 
-
-
 clock = pygame.time.Clock()
 
 # create the players
@@ -205,16 +204,17 @@ player1 = Player( 20, 100, 20 )
 player2 = Player( 400, 100, 20 )
 
 while 1:
-  handle_input()
+  t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
 
-  player1.update()
-  player2.update()
+  handle_input( t )
+
+  player1.update( t )
+  player2.update( t )
 
   for bullet in bullets:
-    bullet.update()
+    bullet.update( t )
 
-  # check for collisions
-  for bullet in bullets:
+    # check for collisions
     if ( math.fabs( bullet.getX() - player1.getX() ) < player1.getRadius() and
        math.fabs( bullet.getY() - player1.getY() ) < player1.getRadius() ):
       player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
@@ -243,4 +243,3 @@ while 1:
     bullet.draw()
 
   pygame.display.flip()
-  clock.tick_busy_loop(60)
