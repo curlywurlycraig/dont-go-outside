@@ -126,7 +126,7 @@ class Player:
     screen.blit( player_surface, (int(self.x - self.radius), int(self.y - self.radius) ) )
 
     # draw the reticule
-    reticule_size = 6
+    reticule_size = self.shot_size
     reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
     reticule_surface.set_colorkey( (0,0,0) )
     reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE, ( self.x, self.y ) )
