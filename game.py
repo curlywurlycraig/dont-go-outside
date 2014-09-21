@@ -74,11 +74,11 @@ p2_win.blit(p2_text, textpos2)
 p1_win.blit(start_text, startpos)
 p2_win.blit(start_text, startpos)
 
+# sound resources
+sound_charge = pygame.mixer.Sound( "res/buildup.wav" )
 
 
 bullets = []
-
-updaterects = []
 
 friction = 1
 
@@ -265,8 +265,10 @@ class Player:
 
   def startCharging( self ):
     self.isCharging = True
+    sound_charge.play()
 
   def fire( self ):
+    sound_charge.stop()
     fire_speed = 500
     mass = self.shotSize
 
@@ -339,7 +341,6 @@ class Bullet:
 
     drawPos = ( self.x - size/2, self.y - size/2 )
     screen.blit( bullet_surface, drawPos )
-    updaterects.append( bullet_surface.get_rect())
 
 def next_round():
   global player1
