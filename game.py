@@ -67,7 +67,7 @@ startpos.centerx = screen.get_rect().centerx
 
 textpos1.centery = 300
 textpos2.centery = 300
-startpos.centery = 450
+startpos.centery = 425
 
 p1_win.blit(p1_text, textpos1)
 p2_win.blit(p2_text, textpos2)
@@ -323,6 +323,7 @@ def next_round():
   global player1
   global player2
   global winner
+  global bullets
   screen_pos = screen.get_rect()
   p1x = screen_pos.centerx - 100
   p2x = screen_pos.centerx + 100
@@ -330,6 +331,7 @@ def next_round():
   player1 = Player( PLAYER1_COLOR, p1x, py, 20, 0 )
   player2 = Player( PLAYER2_COLOR, p2x, py, 20, math.pi )
   winner = None
+  bullets = []
 
 number_of_rounds = 2*menu.draw(screen) + 1
 round_count = 1
@@ -397,15 +399,16 @@ while 1:
   # draw stuff
   screen.blit( bg, (0, 0) )
   screen.blit( play_area, (0, 0) )
+  screen.blit( gui_overlay, (0, 0) )
   player1.draw()
   player2.draw()
+
+  for bullet in bullets:
+    bullet.draw()
 
   if winner == player1:
     screen.blit( p1_win, (0, 0) )
   elif winner == player2:
     screen.blit( p2_win, (0, 0) )
-
-  for bullet in bullets:
-    bullet.draw()
 
   pygame.display.flip()

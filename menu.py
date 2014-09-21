@@ -4,10 +4,10 @@ import joystick
 from pygame.locals import *
 
 # Colour Definitions
-bgCol = (20,20,20)
-buttonCol = (100,100,100)
+bgCol = (0,0,40)
+buttonCol = (0,0,150)
 fontCol = (255,255,255)
-highlightCol = (200,200,200)
+highlightCol = (0,0,200)
 buttonPositions = []
 menuLocation = 0
 
@@ -72,7 +72,7 @@ def draw( screen ):
   text = font.render("Don't go Outside!", True , fontCol)
   textpos = text.get_rect()
   textpos.centerx = background.get_rect().centerx
-  textpos.top = 100
+  textpos.top = 200
   background.blit(text,textpos)
 
   # Make everything but the buttons transparent
@@ -82,11 +82,9 @@ def draw( screen ):
   buttons.set_colorkey((0,255,0))
 
   # Draw the buttons
-  b1 = drawButton(buttons, "Best of 1", 250)
-  b2 = drawButton(buttons, "Best of 3", 300)
-  b3 = drawButton(buttons, "Best of 5", 350)
+  b1 = drawButton(buttons, "Press X to start!", 350)
   global buttonPositions
-  buttonPositions = [b1,b2,b3]
+  buttonPositions = [b1]
 
   # Draw menu highlight and initalize to first item
   highlight = pygame.Surface((220,40))
