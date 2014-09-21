@@ -1,0 +1,13 @@
+Players have health, and how low on health they are decides how much they get
+knocked back by bullets (think Smash Bros.)
+
+Players lose health by getting hit by bullets or by colliding with the other
+player (to try to stop people ramming into each other)
+
+There are health pickups (maybe?)
+
+Health should be recorded similarly to smash bros: a percentage that keeps
+increasing
+
+This percentage value could be multiplied into the force calculations on the
+player (for example).
