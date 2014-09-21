@@ -13,7 +13,7 @@ joystick.init()
 
 BG_COLOR = (0, 0, 50)
 SCREEN_DIMENSIONS = (800, 600)
-PLAYER1_COLOR = ( 51, 73, 160 )
+PLAYER1_COLOR = ( 51, 100, 255 )
 PLAYER2_COLOR = ( 160, 73, 51 )
 TEXT_COLOR = ( 255, 255, 255 )
 RETICULE_DISTANCE = 10
@@ -67,16 +67,24 @@ startpos.centerx = screen.get_rect().centerx
 
 textpos1.centery = 300
 textpos2.centery = 300
-startpos.centery = 450
+startpos.centery = 425
 
 p1_win.blit(p1_text, textpos1)
 p2_win.blit(p2_text, textpos2)
 p1_win.blit(start_text, startpos)
 p2_win.blit(start_text, startpos)
 
-# sound resources
+# sound resources
 sound_charge = pygame.mixer.Sound( "res/buildup.wav" )
 
+# GUI Elements
+special_text = font16.render("Blink:", True, TEXT_COLOR)
+special_bar_back_1 = pygame.Surface((210, 34))
+special_bar_back_1.fill(PLAYER1_COLOR)
+special_bar_back_2 = pygame.Surface((210, 34))
+special_bar_back_2.fill(PLAYER2_COLOR)
+special_bar_empty = pygame.Surface((200, 26))
+special_bar_empty.fill((0,84,60))
 
 bullets = []
 
@@ -127,8 +135,12 @@ def handle_input( t ):
           if event.joy == 0:
             player1.block()
           elif event.joy == 1:
-
             player2.block()
+      elif event.button == 0:
+        if event.joy == 0:
+          player1.blink(joystick.get_stick_direction(0,0))
+        elif event.joy == 1:
+          player2.blink(joystick.get_stick_direction(1,0))
     elif event.type == JOYBUTTONUP:
       if event.button == 5: # R1/RB
         if event.joy == 0:
@@ -155,6 +167,16 @@ class Player:
     self.blocking = False
     self.lastBlock = 0
     self.blockSize = math.pi
+    self.boostAmount = 0
+    self.hasBlocked = False
+
+  def getBoostAmount(self):
+    return self.boostAmount
+
+  def blink( self , angle ):
+    if (self.boostAmount >= 25):
+      self.boostAmount -= 25
+      self.force((angle, 5000),1)
 
   def block( self ):
     time = pygame.time.get_ticks()
@@ -261,11 +283,20 @@ class Player:
 
       if self.blocking:
         if pygame.time.get_ticks() - self.lastBlock > BLOCK_WINDOW:
+          if not self.hasBlocked:
+            self.boostAmount -= 10
+            if self.boostAmount < 0: self.boostAmount = 0
           self.blocking = False
+          self.hasBlocked = False
 
   def startCharging( self ):
     self.isCharging = True
     sound_charge.play()
+
+  def has_blocked( self, mass ):
+    self.hasBlocked = True
+    self.boostAmount += mass*2
+    if self.boostAmount > 100: self.boostAmount = 100
 
   def fire( self ):
     sound_charge.stop()
@@ -346,6 +377,7 @@ def next_round():
   global player1
   global player2
   global winner
+  global bullets
   screen_pos = screen.get_rect()
   p1x = screen_pos.centerx - 100
   p2x = screen_pos.centerx + 100
@@ -353,6 +385,7 @@ def next_round():
   player1 = Player( PLAYER1_COLOR, p1x, py, 20, 0 )
   player2 = Player( PLAYER2_COLOR, p2x, py, 20, math.pi )
   winner = None
+  bullets = []
 
 number_of_rounds = 2*menu.draw(screen) + 1
 round_count = 1
@@ -368,10 +401,15 @@ player1 = Player( PLAYER1_COLOR, p1x, py, 20, 0 )
 player2 = Player( PLAYER2_COLOR, p2x, py, 20, math.pi )
 winner = None
 
+# Play Background Music
 music_file = "res/music.wav"
 music = pygame.mixer.Sound( music_file )
-music.set_volume( 0.25 )
+music.set_volume( 0.1 )
 music.play(loops=-1)
+
+# Create the GUI Overlay
+gui_overlay = pygame.surface.Surface(SCREEN_DIMENSIONS)
+gui_overlay.set_colorkey((0,0,0))
 while 1:
   t = clock.tick_busy_loop( 60 ) / 1000.0 # measure in seconds
 
@@ -391,6 +429,7 @@ while 1:
       if bullet.getOwner() != player1:
         if player1.isBlocking():
           bullet.deflect( player1 )
+          player1.has_blocked(bullet.getMass())
         else:
           player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
           if bullet not in bullets_for_removal:
@@ -401,6 +440,7 @@ while 1:
       if bullet.getOwner() != player2:
         if player2.isBlocking():
           bullet.deflect( player2 )
+          player2.has_blocked(bullet.getMass())
         else:
           player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
           if bullet not in bullets_for_removal:
@@ -423,18 +463,33 @@ while 1:
       player2.kill()
       winner = player1
 
+  # Generate GUI
+  gui_overlay.blit(special_bar_back_1, (25, 540))
+  gui_overlay.blit(special_bar_back_2, (565, 540))
+  gui_overlay.blit(special_bar_empty, (30, 544))
+  gui_overlay.blit(special_bar_empty, (570, 544))
+
+  p1bar = pygame.surface.Surface((player1.getBoostAmount()*2, 26))
+  p1bar.fill((0,255,183))
+  p2bar = pygame.surface.Surface((player2.getBoostAmount()*2, 26))
+  p2bar.fill((0,255,183))
+
+  gui_overlay.blit(p1bar, (30,544))
+  gui_overlay.blit(p2bar, (570,544))
+
   # draw stuff
   screen.blit( bg, (0, 0) )
   screen.blit( play_area, (0, 0) )
+  screen.blit( gui_overlay, (0, 0) )
   player1.draw()
   player2.draw()
+
+  for bullet in bullets:
+    bullet.draw()
 
   if winner == player1:
     screen.blit( p1_win, (0, 0) )
   elif winner == player2:
     screen.blit( p2_win, (0, 0) )
-
-  for bullet in bullets:
-    bullet.draw()
 
   pygame.display.flip()
