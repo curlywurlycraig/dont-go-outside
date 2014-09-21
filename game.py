@@ -24,6 +24,10 @@ JOYPAD_CALIBRATION = 10000
 MAX_SHOT_SIZE = 30
 DEFAULT_SHOT_SIZE = 5
 DENSITY = 1
+BLOCK_TIME_LIMIT = 500
+BLOCK_WINDOW = 200
+ARC_DISTANCE = 10
+
 
 screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.HWSURFACE, 16)
 
@@ -74,12 +78,19 @@ def handle_input( t ):
     elif event.type == KEYDOWN:
       if event.key == K_ESCAPE:
         sys.exit()
+      elif event.key == K_x:
+        player2.block()
     elif event.type == JOYBUTTONDOWN:
       if event.button == 5: # R1/RB
         if event.joy == 0:
           if player1.isAlive(): player1.startCharging()
         elif event.joy == 1:
           if player2.isAlive(): player2.startCharging()
+      elif event.button == 4:
+          if event.joy == 0:
+            player1.block()
+          elif event.joy == 1:
+            player2.block()
     elif event.type == JOYBUTTONUP:
       if event.button == 5: # R1/RB
         if event.joy == 0:
@@ -90,9 +101,8 @@ def handle_input( t ):
 
 
 
-
-
 class Player:
+
   def __init__( self, color, x, y, radius, direction ):
     self.color = color
     self.x = x
@@ -104,6 +114,16 @@ class Player:
     self.radius = radius
     self.direction = direction
     self.alive = True
+    self.blocking = False
+    self.lastBlock = 0
+    self.blockSize = math.pi
+
+  def block( self ):
+    time = pygame.time.get_ticks()
+
+    if time - self.lastBlock > BLOCK_TIME_LIMIT:
+      self.blocking = True
+      self.lastBlock = pygame.time.get_ticks()
 
   def kill( self ):
     self.alive = False
@@ -149,6 +169,18 @@ class Player:
       pygame.transform.rotate( reticule_surface, degrees_from_radians( self.direction ) )
       screen.blit( reticule_surface, reticule_pos )
 
+    # blocking
+    if self.blocking:
+      block_surface = pygame.Surface( ( diameter + ARC_DISTANCE * 2, diameter + ARC_DISTANCE * 2 ) )
+      block_surface.set_colorkey( ( 0,0,0) )
+      top_left = ( self.x - self.radius - ARC_DISTANCE, self.y - self.radius - ARC_DISTANCE )
+      width_height = diameter + ARC_DISTANCE * 2
+
+      arc_start = self.direction - self.blockSize / 2
+      arc_end = self.direction + self.blockSize / 2
+      pygame.draw.arc( block_surface, self.color, pygame.Rect( (0, 0), ( width_height, width_height ) ), arc_start, arc_end, 2 )
+      screen.blit( block_surface, top_left )
+
   # dir is measured in radians as taken from "right"
   def force( self, polar, mass ):
     direction = polar[0]
@@ -173,6 +205,10 @@ class Player:
         self.shotSize += 0.1
         if self.shotSize > MAX_SHOT_SIZE:
           self.shotSize = MAX_SHOT_SIZE
+
+      if self.blocking:
+        if pygame.time.get_ticks() - self.lastBlock > BLOCK_WINDOW:
+          self.blocking = False
 
   def startCharging( self ):
     self.isCharging = True
