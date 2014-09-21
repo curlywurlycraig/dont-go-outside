@@ -126,12 +126,13 @@ class Player:
     screen.blit( player_surface, (int(self.x - self.radius), int(self.y - self.radius) ) )
 
     # draw the reticule
-    reticule_size = self.shot_size
+    reticule_size = self.shotSize
+    print reticule_size
     reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
     reticule_surface.set_colorkey( (0,0,0) )
-    reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE, ( self.x, self.y ) )
+    reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE + self.shotSize/2, ( self.x, self.y ) )
     reticule_pos = ( int( reticule_pos[0] - reticule_size / 2.0), int( reticule_pos[1] - reticule_size / 2.0 ) )
-    pygame.draw.circle( reticule_surface, RETICULE_COLOR, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), 2 )
+    pygame.draw.circle( reticule_surface, RETICULE_COLOR, ( int( reticule_size / 2 ), int( reticule_size / 2 ) ), int(reticule_size/2) )
     pygame.transform.rotate( reticule_surface, degrees_from_radians( self.direction ) )
     screen.blit( reticule_surface, reticule_pos )
 
@@ -162,7 +163,7 @@ class Player:
   def fire( self ):
     fire_speed = 500
     mass = self.shotSize
-    bullet_start_pos = cart_from_polar( self.direction, self.radius, ( self.x, self.y ))
+    bullet_start_pos = cart_from_polar( self.direction, self.radius + self.shotSize, ( self.x, self.y ))
     bullets.append( Bullet( bullet_start_pos, self.direction, fire_speed, mass ) )
 
     # Reset charging status
@@ -210,7 +211,7 @@ class Bullet:
     pygame.draw.circle( bullet_surface, BULLET_COLOR, ( int( size / 2 ), int( size / 2 ) ), int( size / 2 ) )
     #pygame.draw.line( bullet_surface, BULLET_COLOR, (self.x, self.y ), (-1 * length_scale * self.vx, -1 * length_scale * self.vy), 3 )
 
-    drawPos = ( self.x, self.y )
+    drawPos = ( self.x - size/2, self.y - size/2 )
     screen.blit( bullet_surface, drawPos )
     updaterects.append( bullet_surface.get_rect())
 
