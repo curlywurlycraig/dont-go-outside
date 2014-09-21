@@ -60,8 +60,10 @@ def handle_input( t ):
   player1.force((joystick.get_stick_direction(0,0),joystick.get_stick_magnitude(0,0) * JOYPAD_CALIBRATION * t),1)
   player2.force((joystick.get_stick_direction(1,0),joystick.get_stick_magnitude(1,0) * JOYPAD_CALIBRATION * t),1)
 
-  player1.setDirection((joystick.get_stick_direction(0,1)))
-  player2.setDirection((joystick.get_stick_direction(1,1)))
+  if (joystick.get_stick_magnitude(0,1) > 0.5):
+    player1.setDirection((joystick.get_stick_direction(0,1)))
+  if (joystick.get_stick_magnitude(1,1) > 0.5):
+    player2.setDirection((joystick.get_stick_direction(1,1)))
 
   for event in pygame.event.get():
     if event.type == QUIT:
