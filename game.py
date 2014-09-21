@@ -74,9 +74,6 @@ p2_win.blit(p2_text, textpos2)
 p1_win.blit(start_text, startpos)
 p2_win.blit(start_text, startpos)
 
-# sound resources
-sound_charge = pygame.mixer.Sound( "res/buildup.wav" )
-
 # GUI Elements
 special_text = font16.render("Blink:", True, TEXT_COLOR)
 special_bar_back_1 = pygame.Surface((210, 34))
@@ -169,6 +166,7 @@ class Player:
     self.blockSize = math.pi
     self.boostAmount = 0
     self.hasBlocked = False
+    self.sound_charge = pygame.mixer.Sound( "res/buildup.wav" )
 
   def getBoostAmount(self):
     return self.boostAmount
@@ -187,6 +185,7 @@ class Player:
 
   def kill( self ):
     self.alive = False
+    self.sound_charge.stop()
 
   def isAlive( self ):
     return self.alive
@@ -291,7 +290,7 @@ class Player:
 
   def startCharging( self ):
     self.isCharging = True
-    sound_charge.play()
+    self.sound_charge.play()
 
   def has_blocked( self, mass ):
     self.hasBlocked = True
@@ -299,7 +298,7 @@ class Player:
     if self.boostAmount > 100: self.boostAmount = 100
 
   def fire( self ):
-    sound_charge.stop()
+    self.sound_charge.stop()
     fire_speed = 500
     mass = self.shotSize
 
@@ -404,7 +403,7 @@ winner = None
 # Play Background Music
 music_file = "res/music.wav"
 music = pygame.mixer.Sound( music_file )
-music.set_volume( 0.1 )
+music.set_volume( 0.5 )
 music.play(loops=-1)
 
 # Create the GUI Overlay
