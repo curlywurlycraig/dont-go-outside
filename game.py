@@ -139,7 +139,6 @@ class Player:
 
     # draw the reticule
     reticule_size = self.shotSize
-    print reticule_size
     reticule_surface = pygame.Surface( ( reticule_size, reticule_size ) )
     reticule_surface.set_colorkey( (0,0,0) )
     reticule_pos = cart_from_polar( self.direction, self.radius + RETICULE_DISTANCE + self.shotSize/2, ( self.x, self.y ) )
@@ -179,16 +178,22 @@ class Player:
   def fire( self ):
     fire_speed = 500
     mass = self.shotSize
+
+    # play the sound
+    sound_strength = int( math.ceil( 4 * ( ( self.shotSize - 5 ) / ( MAX_SHOT_SIZE - 5 ) ) ) )
+    if sound_strength == 0:
+      sound_strength = 1
+    filename = "res/pew" + str( sound_strength ) + ".wav"
+    sound = pygame.mixer.Sound( filename )
+    sound.play()
+
+
     bullet_start_pos = cart_from_polar( self.direction, self.radius, ( self.x, self.y ))
     bullets.append( Bullet( self.color, bullet_start_pos, self.direction, fire_speed, mass ) )
 
     # Reset charging status
     self.shotSize = DEFAULT_SHOT_SIZE
     self.isCharging = False
-
-
-
-
 
 
 class Bullet:
@@ -261,17 +266,20 @@ while 1:
     if ( math.fabs( bullet.getX() - player1.getX() ) < player1.getRadius() and
        math.fabs( bullet.getY() - player1.getY() ) < player1.getRadius() ):
       player1.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-      bullets_for_removal.append( bullet )
+      if bullet not in bullets_for_removal:
+        bullets_for_removal.append( bullet )
 
     if ( math.fabs( bullet.getX() - player2.getX() ) < player2.getRadius() and
        math.fabs( bullet.getY() - player2.getY() ) < player2.getRadius() ):
       player2.force( polar_from_cart( bullet.getVX(), bullet.getVY() ), bullet.getMass() )
-      bullets_for_removal.append( bullet )
+      if bullet not in bullets_for_removal:
+        bullets_for_removal.append( bullet )
 
     # Kill bullets out of bounds
     if ( bullet.getX() > SCREEN_DIMENSIONS[0] or bullet.getX() < 0
       or bullet.getY() > SCREEN_DIMENSIONS[1] or bullet.getY() < 0 ):
-      bullets_for_removal.append( bullet )
+      if bullet not in bullets_for_removal:
+        bullets_for_removal.append( bullet )
 
   for bullet in bullets_for_removal:
     bullets.remove( bullet )
