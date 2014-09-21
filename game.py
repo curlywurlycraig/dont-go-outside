@@ -2,6 +2,7 @@ import sys
 import pygame
 import math
 import code
+import menu
 
 import joystick
 from maths import *
@@ -20,7 +21,7 @@ PLAY_AREA_COLOR = ( 0, 0, 50 )
 PLAY_AREA_RADIUS = 275
 BULLET_COLOR = ( 100, 100, 255, 0 )
 JOYPAD_CALIBRATION = 10000
-MAX_SHOT_SIZE = 40
+MAX_SHOT_SIZE = 30
 DEFAULT_SHOT_SIZE = 5
 DENSITY = 1
 
@@ -76,15 +77,15 @@ def handle_input( t ):
     elif event.type == JOYBUTTONDOWN:
       if event.button == 5: # R1/RB
         if event.joy == 0:
-          if winner==None: player1.startCharging()
+          if player1.isAlive(): player1.startCharging()
         elif event.joy == 1:
-          if winner==None: player2.startCharging()
+          if player2.isAlive(): player2.startCharging()
     elif event.type == JOYBUTTONUP:
       if event.button == 5: # R1/RB
         if event.joy == 0:
-          if winner==None: player1.fire()
+          if player1.isAlive(): player1.fire()
         elif event.joy == 1:
-          if winner==None: player2.fire()
+          if player2.isAlive(): player2.fire()
 
 
 
@@ -241,6 +242,8 @@ class Bullet:
     updaterects.append( bullet_surface.get_rect())
 
 
+
+number_of_rounds = 2*menu.draw(screen) + 1
 
 clock = pygame.time.Clock()
 

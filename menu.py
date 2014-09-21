@@ -1,5 +1,6 @@
 import sys
 import pygame
+import joystick
 from pygame.locals import *
 
 # Colour Definitions
@@ -35,17 +36,28 @@ def drawButton ( surface, string, y ):
 def handle_input( ):
   global menuLocation
   for event in pygame.event.get():
+    if event.type == QUIT:
+      sys.exit()
     if event.type == KEYDOWN:
       if event.key == K_DOWN:
         menuLocation += 1
-        if menuLocation > (len(buttonPositions)-1):
-          menuLocation = (len(buttonPositions)-1)
       elif event.key == K_UP:
         menuLocation -= 1
-        if menuLocation < 0:
-          menuLocation = 0
       elif event.key == K_RETURN:
         return True
+    elif event.type == JOYBUTTONDOWN:
+      if event.button == 0:
+        return True
+    elif event.type == JOYHATMOTION:
+      if event.value == (0,1):
+        menuLocation -= 1
+      if event.value == (0,-1):
+        menuLocation += 1
+
+    if menuLocation < 0:
+      menuLocation = 0
+    if menuLocation > (len(buttonPositions)-1):
+      menuLocation = (len(buttonPositions)-1)
   return False
 
 # Returns the button id that is selected by the user.
@@ -70,9 +82,9 @@ def draw( screen ):
   buttons.set_colorkey((0,255,0))
 
   # Draw the buttons
-  b1 = drawButton(buttons, "Singleplayer", 200)
-  b2 = drawButton(buttons, "Multiplayer", 250)
-  b3 = drawButton(buttons, "Scores", 300)
+  b1 = drawButton(buttons, "Best of 1", 200)
+  b2 = drawButton(buttons, "Best of 3", 250)
+  b3 = drawButton(buttons, "Best of 5", 300)
   global buttonPositions
   buttonPositions = [b1,b2,b3]
 
