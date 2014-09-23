@@ -12,13 +12,13 @@ pygame.init()
 joystick.init()
 
 BG_COLOR = (0, 0, 50)
-SCREEN_DIMENSIONS = (800, 600)
+SCREEN_DIMENSIONS = (1336,768)
 PLAYER1_COLOR = ( 51, 100, 255 )
 PLAYER2_COLOR = ( 160, 73, 51 )
 TEXT_COLOR = ( 255, 255, 255 )
 RETICULE_DISTANCE = 10
 PLAY_AREA_COLOR = ( 21, 35, 150 )
-PLAY_AREA_RADIUS = 275
+PLAY_AREA_RADIUS = 350
 BULLET_COLOR = ( 100, 100, 255, 0 )
 JOYPAD_CALIBRATION = 10000
 MAX_SHOT_SIZE = 30
@@ -29,7 +29,7 @@ BLOCK_WINDOW = 200
 ARC_DISTANCE = 10
 
 
-screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.HWSURFACE, 16)
+screen = pygame.display.set_mode(SCREEN_DIMENSIONS, pygame.HWSURFACE | pygame.FULLSCREEN, 16)
 
 # fill background
 bg = pygame.Surface(SCREEN_DIMENSIONS)
@@ -88,6 +88,7 @@ bullets = []
 friction = 1
 
 def handle_input( t ):
+  global score
   keys = pygame.key.get_pressed()
   if keys[K_DOWN]:
     player1.force( (math.pi / 2, 10000 * t ), 1 )
@@ -120,6 +121,8 @@ def handle_input( t ):
       elif event.key == K_x:
         player2.block()
     elif event.type == JOYBUTTONDOWN:
+      if event.button == 6: # Select
+        score = [0,0]
       if event.button == 7: # Start
         if not (winner == None):
           next_round()
@@ -133,7 +136,7 @@ def handle_input( t ):
             player1.block()
           elif event.joy == 1:
             player2.block()
-      elif event.button == 0:
+      elif event.button == 8: # R3
         if event.joy == 0:
           player1.blink(joystick.get_stick_direction(0,0))
         elif event.joy == 1:
@@ -276,7 +279,7 @@ class Player:
 
       # Grow bullets
       if self.isCharging:
-        self.shotSize += 0.1
+        self.shotSize += 0.15
         if self.shotSize > MAX_SHOT_SIZE:
           self.shotSize = MAX_SHOT_SIZE
 
@@ -389,6 +392,8 @@ def next_round():
 number_of_rounds = 2*menu.draw(screen) + 1
 round_count = 1
 
+score = [0,0]
+
 clock = pygame.time.Clock()
 
 # create the players
@@ -458,23 +463,33 @@ while 1:
     if ((player1.getX() - screen_pos.centerx)**2 + (player1.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
       player1.kill()
       winner = player2
+      score[1] += 1
     elif ((player2.getX()-screen_pos.centerx)**2 + (player2.getY() - screen_pos.centery)**2 > PLAY_AREA_RADIUS**2):
       player2.kill()
       winner = player1
+      score[0] += 1
 
   # Generate GUI
-  gui_overlay.blit(special_bar_back_1, (25, 540))
-  gui_overlay.blit(special_bar_back_2, (565, 540))
-  gui_overlay.blit(special_bar_empty, (30, 544))
-  gui_overlay.blit(special_bar_empty, (570, 544))
+  gui_overlay.fill((0,0,0))
+  gui_overlay.blit(special_bar_back_1, (25, 700))
+  gui_overlay.blit(special_bar_back_2, (SCREEN_DIMENSIONS[0]-235, 700))
+  gui_overlay.blit(special_bar_empty, (30, 704))
+  gui_overlay.blit(special_bar_empty, (SCREEN_DIMENSIONS[0]-230, 704))
 
   p1bar = pygame.surface.Surface((player1.getBoostAmount()*2, 26))
   p1bar.fill((0,255,183))
   p2bar = pygame.surface.Surface((player2.getBoostAmount()*2, 26))
   p2bar.fill((0,255,183))
 
-  gui_overlay.blit(p1bar, (30,544))
-  gui_overlay.blit(p2bar, (570,544))
+  p1score = font128.render(str(score[0]), True, PLAYER1_COLOR)
+  p2score = font128.render(str(score[1]), True, PLAYER2_COLOR)
+
+  gui_overlay.blit(p1bar, (30,704))
+  gui_overlay.blit(p2bar, (SCREEN_DIMENSIONS[0]-230,704))
+  gui_overlay.blit(p1score, (SCREEN_DIMENSIONS[0]/2-225,10))
+  gui_overlay.blit(p2score, (SCREEN_DIMENSIONS[0]/2+225,10))
+
+  print score
 
   # draw stuff
   screen.blit( bg, (0, 0) )
